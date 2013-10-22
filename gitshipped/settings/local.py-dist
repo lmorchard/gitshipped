@@ -9,11 +9,11 @@ from . import base
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'playdoh_app',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'NAME': 'gitshipped',
+        'USER': 'gitshipped',
+        'PASSWORD': 'gitshipped',
+        'HOST': 'localhost',
+        'PORT': '3306',
         'OPTIONS': {
             'init_command': 'SET storage_engine=InnoDB',
             'charset' : 'utf8',
