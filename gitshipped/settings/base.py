@@ -16,6 +16,7 @@ TIME_ZONE = 'US/Pacific'
 ROOT_URLCONF = '%s.urls' % PROJECT_MODULE
 
 INSTALLED_APPS = list(INSTALLED_APPS) + [
+    'django.contrib.admin',
     'south',
     'constance.backends.database',
     'constance',

@@ -38,7 +38,7 @@ services:
 hooks:
   post-staging:
     - python manage.py syncdb --noinput
-      #- python manage.py migrate --delete-ghost-migrations gitshipped.main --noinput
+    - python manage.py migrate --delete-ghost-migrations gitshipped.main --noinput
     - python manage.py collectstatic --noinput
 ignores:
   - ".git"
