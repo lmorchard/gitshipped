@@ -1,3 +1,5 @@
+import os
+import os.path
 import logging
 import json
 import urllib
@@ -7,6 +9,7 @@ from nose.tools import assert_equal, with_setup, assert_false, eq_, ok_
 from nose.plugins.attrib import attr
 
 import mock
+import uritemplate
 
 from django.conf import settings, UserSettingsHolder
 from django.utils.functional import wraps
@@ -23,6 +26,39 @@ from ..models import (_github_url, _github_GET,
 
 FAKE_ID = 'FAKE_ID'
 FAKE_SECRET = 'FAKE_SECRET'
+
+
+def _load_json(path):
+    fn = os.path.join(os.path.dirname(__file__),
+                      'fixtures', '%s.json' % path)
+    return json.loads(open(fn, 'rb').read())
+
+
+def mock_get(status_code=200, headers=None, content='', data=None):
+    # Set up to simulate API requests / responses
+    headers = headers and headers or {}
+    inputs = dict(status_code=status_code, headers=headers,
+                  content=content, data=data)
+    outputs = {}
+    def get_fn(url, headers=None, timeout=None):
+        outputs['url'] = url
+        outputs['headers'] = headers
+        if inputs['data']:
+            data = inputs['data']
+            content = json.dumps(inputs['data'])
+        elif inputs['content'] is not None:
+            data = None
+            content = inputs['content']
+        else:
+            data = None
+            content = ''
+        return FakeResponse(
+            status_code=status_code,
+            headers=headers,
+            content=content,
+            json=lambda: data
+        )
+    return (get_fn, inputs, outputs)
 
 
 class GithubDataTests(test.TestCase):
@@ -48,41 +84,21 @@ class GithubDataTests(test.TestCase):
     @override_constance_settings(
         GITHUB_API_ID = FAKE_ID,
         GITHUB_API_SECRET = FAKE_SECRET)
-    @mock.patch('requests.get')
-    def test_github_get(self, mock_requests_get):
-        
-        # Set up to simulate API requests / responses
-        inputs = dict(status_code=200, headers={}, content='')
-        outputs = {}
-        def my_requests_get(url, headers=None, timeout=None):
-            outputs['url'] = url
-            outputs['headers'] = headers
-            if inputs['content'] is not None:
-                content = inputs['content']
-            else:
-                content = json.dumps(dict(objects=[
-                    {"email": inputs['email'],
-                     "is_vouched": inputs['vouched']}
-                ]))
-
-            return FakeResponse(
-                status_code=200,
-                headers={},
-                content=content,
-                json=lambda: {} #json.loads(content)
-            )
-        mock_requests_get.side_effect = my_requests_get
-
+    def test_github_url(self):
         url = _github_url('repos/mozilla/kuma')
-        logging.debug("URL %s" % url)
         ok_('client_id=%s' % FAKE_ID in url)
         ok_('client_secret=%s' % FAKE_SECRET in url)
 
+    @override_constance_settings(
+        GITHUB_API_ID = FAKE_ID,
+        GITHUB_API_SECRET = FAKE_SECRET)
+    @mock.patch('requests.get')
+    def test_github_get(self, mock_requests_get):
+        (mock_requests_get.side_effect, _, _) = mock_get(
+            data = _load_json('repos_mozilla_kuma')
+        )
         resp = _github_GET('repos/mozilla/kuma')
-        logging.debug("RESP %s" % resp.json())
+        data = resp.json()
 
-        ok_(False, 'play')
-
-    def test_play(self):
-        eq_(4, 2+2)
-        ok_(False, 'play')
+        ok_('kuma', data['name'])
+        ok_('mozilla/kuma', data['full_name'])
