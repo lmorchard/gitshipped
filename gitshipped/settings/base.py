@@ -16,6 +16,9 @@ TIME_ZONE = 'US/Pacific'
 ROOT_URLCONF = '%s.urls' % PROJECT_MODULE
 
 INSTALLED_APPS = list(INSTALLED_APPS) + [
+    'south',
+    'constance.backends.database',
+    'constance',
     # Application base, containing global templates.
     '%s.base' % PROJECT_MODULE,
     # Example code. Can (and should) be removed for actual projects.
@@ -24,8 +27,8 @@ INSTALLED_APPS = list(INSTALLED_APPS) + [
 
 # Note! If you intend to add `south` to INSTALLED_APPS,
 # make sure it comes BEFORE `django_nose`.
-#INSTALLED_APPS.remove('django_nose')
-#INSTALLED_APPS.append('django_nose')
+INSTALLED_APPS.remove('django_nose')
+INSTALLED_APPS.append('django_nose')
 
 
 LOCALE_PATHS = (
@@ -99,3 +102,10 @@ LOGGING = {
         }
     }
 }
+
+CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+CONSTANCE_CONFIG = dict(
+    GITHUB_API_ID = ('', 'GitHub API application ID'),
+    GITHUB_API_SECRET = ('', 'GitHub API application secret'),
+)
